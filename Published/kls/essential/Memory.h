@@ -52,7 +52,7 @@ namespace kls::essential {
     template<class T, class Alloc>
     void allocator_delete(Alloc& alloc, T* ptr) {
         using traits = std::allocator_traits<Alloc>;
-        traits::deallocate(alloc, allocator_destruct(ptr), 1);
+        traits::deallocate(alloc, allocator_destruct(alloc, ptr), 1);
     }
 
     /// <summary>
