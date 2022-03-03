@@ -36,4 +36,25 @@ namespace kls::essential {
     private:
         Fn m_fn;
     };
+
+    template <class T, class Fn>
+    class RAII {
+    public:
+        explicit RAII(T v, Fn&& fn) : m_v(v), m_fn(std::forward<Fn>(fn)) {}
+
+        explicit RAII(T v, const Fn& fn) : m_v(v), m_fn(std::forward<Fn>(fn)) {}
+
+        auto reset(T v) noexcept {
+            auto res = m_v;
+            m_v = v;
+            return res;
+        }
+
+        auto get() const noexcept { return m_v; }
+
+        ~RAII() noexcept { m_fn(m_v); }
+    private:
+        T m_v;
+        Fn m_fn;
+    };
 }
