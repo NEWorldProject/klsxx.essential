@@ -81,7 +81,7 @@ namespace kls::essential {
     template <class T = void>
     class Span {
     public:
-        template <class Range> requires std::contiguous_range<T>
+        template <class Range> requires std::ranges::contiguous_range<Range>
         constexpr Span(Range& range) noexcept: m_begin(std::ranges::data(range)), m_size(std::ranges::size(range)) {}
         constexpr Span(T* data, size_t size) noexcept : m_begin{ data }, m_size(size) {}
         constexpr Span(Span&&) noexcept = default;

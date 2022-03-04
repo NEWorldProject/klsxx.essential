@@ -22,55 +22,17 @@
 
 #pragma once
 
-#include "Temp.h"
+#include <map>
+#include <set>
+#include <deque>
+#include <string>
+#include <vector>
+#include <sstream>
 #include <utility>
 #include <functional>
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4099)
-#endif // _MSC_VER
-
-namespace std {
-    template <class CharT> 
-    class char_traits;
-
-    template <class CharT, class Traits, class Allocator> 
-    class basic_string;
-
-    template <class CharT, class Traits, class Allocator> 
-    class basic_stringstream;
-
-    template <class T, class Allocator> 
-    class vector;
-
-    template <class T, class Allocator> 
-    class deque;
-
-    template <class Key, class T, class Compare, class Allocator>
-    class map;
-
-    template <class Key, class Compare, class Allocator> 
-    class set;
-
-    template <class Key, class T, class Compare, class Allocator>
-    class multimap;
-
-    template <class Key, class Compare, class Allocator> 
-    class multiset;
-
-    template <class Key, class Hash, class KeyEqual, class Allocator>
-    class unordered_set;
-
-    template <class Key, class T, class Hash, class KeyEqual, class Allocator> 
-    class unordered_map;
-
-    template <class Key, class Hash, class KeyEqual, class Allocator>
-    class unordered_multiset;
-
-    template <class Key, class T, class Hash, class KeyEqual, class Allocator>
-    class unordered_multimap;
-}
+#include <unordered_map>
+#include <unordered_set>
+#include "Temp.h"
 
 namespace kls::temp {
     template<class T> using basic_string = std::basic_string<T, std::char_traits<T>, allocator<T>>;
@@ -122,7 +84,3 @@ namespace kls::temp {
     template<class T, class V, class Hash = std::hash<T>, class Eq = std::equal_to<T>>
     using unordered_multimap = std::unordered_multimap<T, V, Hash, Eq, allocator<std::pair<const T, V>>>;
 }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
