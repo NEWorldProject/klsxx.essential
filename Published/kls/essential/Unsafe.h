@@ -71,7 +71,7 @@ namespace kls::essential {
         requires std::is_arithmetic_v<T>
         void put(int offset, T v) noexcept {
             if constexpr(sizeof(T) == 1) {
-                *pointer(index) = char(v);
+                *pointer(offset) = char(v);
             } else {
                 if constexpr(std::endian::native != E) byte_swap(v);
                 std::memcpy(pointer(offset), &v, sizeof(T));
@@ -82,7 +82,7 @@ namespace kls::essential {
         requires std::is_arithmetic_v<T>
         [[nodiscard]] T get(int offset) const noexcept {
             if constexpr(sizeof(T) == 1) {
-                return T(*pointer(index));
+                return T(*pointer(offset));
             } else {
                 T result{};
                 std::memcpy(&result, pointer(offset), sizeof(T));
@@ -108,17 +108,32 @@ namespace kls::essential {
 
         template<class T>
         requires std::is_arithmetic_v<T>
-        void put(T v) noexcept {
-            m_access.template put(m_offset, v);
-            m_offset += sizeof(T);
-        }
-
-        template<class T>
-        requires std::is_arithmetic_v<T>
         [[nodiscard]] T get() noexcept {
             auto res = m_access.template get<T>(m_offset);
             m_offset += sizeof(T);
             return res;
+        }
+
+        template<class T>
+        requires std::is_arithmetic_v<T>
+        [[nodiscard]] bool check(int count = 1) const noexcept {
+            return (m_offset + sizeof(T) * count) <= m_access.size();
+        }
+    private:
+        Access<E> m_access;
+        size_t m_offset{0};
+    };
+
+    template<std::endian E>
+    class SpanWriter {
+    public:
+        explicit SpanWriter(Span<> span) noexcept: m_access(span) {}
+
+        template<class T>
+        requires std::is_arithmetic_v<T>
+        void put(T v) noexcept {
+            m_access.template put(m_offset, v);
+            m_offset += sizeof(T);
         }
 
         template<class T>

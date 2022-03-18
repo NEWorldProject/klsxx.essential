@@ -134,7 +134,9 @@ namespace kls::essential {
     /// <param name="o"> The Span object to cast </param>
     /// <returns> The casted span with size being the maximum amount of elements able to fit into o </returns>
     template<class T>
-    inline constexpr Span<T> static_span_cast(Span<> o) noexcept { return Span<T>(static_cast<T*>(o.data()), o.size() / sizeof(T)); }
+    inline constexpr Span<T> static_span_cast(Span<> o) noexcept {
+        return Span<T>(static_cast<T *>(o.data()), o.size() / sizeof(T));
+    }
 
     /// <summary>
     /// The function performs a reinterpret cast from Span<U> regardless of the data alignment 
@@ -144,12 +146,15 @@ namespace kls::essential {
     /// <typeparam name="T"> The type to cast from </typeparam>
     /// <param name="o"> The Span object to cast </param>
     /// <returns> The casted span </returns>
-    template<class T, class U> requires requires {
+    template<class T, class U>
+    requires requires {
         sizeof(T) == sizeof(U);
         std::is_trivially_copyable_v<T>;
         std::is_trivially_copyable_v<U>;
     }
-    inline constexpr Span<T> reinterpret_span_cast(Span<U> o) noexcept { return Span<T>(reinterpret_cast<T*>(o.data()), o.size()); }
+    inline constexpr Span<T> reinterpret_span_cast(Span<U> o) noexcept {
+        return Span<T>(reinterpret_cast<T *>(o.data()), o.size());
+    }
 
     /// <summary>
     /// Copy the source span's items to the destination span using std::copy if both spans have the same size
@@ -159,7 +164,8 @@ namespace kls::essential {
     /// <param name="dest"> The destination span </param>
     /// <returns> If both spans have same size returns true, otherwise false</returns>
     template<class T>
-    constexpr bool copy(Span<T> src, Span<T> dest) noexcept(std::is_nothrow_copy_assignable_v<T> && std::is_nothrow_copy_constructible_v<T>) {
+    constexpr bool copy(Span<T> src, Span<T> dest) noexcept(std::is_nothrow_copy_assignable_v<T> &&
+                                                            std::is_nothrow_copy_constructible_v<T>) {
         if (src.size() != dest.size()) return false;
         std::copy(src.begin(), src.end(), dest.begin());
         return true;
@@ -173,9 +179,75 @@ namespace kls::essential {
     /// <param name="dest"> The destination span </param>
     /// <returns> If both spans have same size returns true, otherwise false</returns>
     template<class T>
-    constexpr bool move(Span<T> src, Span<T> dest) noexcept(std::is_nothrow_move_assignable_v<T> && std::is_nothrow_move_constructible_v<T>) {
+    constexpr bool move(Span<T> src, Span<T> dest) noexcept(std::is_nothrow_move_assignable_v<T> &&
+                                                            std::is_nothrow_move_constructible_v<T>) {
         if (src.size() != dest.size()) return false;
         std::move(src.begin(), src.end(), dest.begin());
         return true;
     }
+}
+
+#include <memory_resource>
+
+namespace kls::pmr {
+    namespace detail {
+        template<class T>
+        inline auto get_alloc(std::pmr::memory_resource *mem) noexcept {
+            return std::pmr::polymorphic_allocator<T>(mem);
+        }
+
+        template<class T>
+        struct destruct_a {
+            std::pmr::memory_resource *resource{};
+
+            void operator()(T *ptr) noexcept {
+                auto alloc = detail::get_alloc<T>(resource);
+                essential::allocator_delete(alloc, ptr);
+            }
+        };
+
+        template<class T>
+        struct destruct_b {
+            size_t size{};
+            std::pmr::memory_resource *resource{};
+
+            using Elem = std::remove_extent_t<T>;
+
+            explicit destruct_b(size_t size, std::pmr::memory_resource *res) noexcept: size(size), resource(res) {}
+
+            void operator()(Elem *ptr) noexcept {
+                for (size_t i = 0; i < size; ++i) std::destroy_at(ptr + i);
+                detail::get_alloc<Elem>(resource).deallocate(ptr, size);
+            }
+        };
+    }
+
+    template<class T>
+    using unique_ptr = std::unique_ptr<T,
+            std::conditional_t<
+                    !std::is_array_v<T>,
+                    detail::destruct_a<T>,
+                    detail::destruct_b<T>
+            >
+    >;
+
+    template<class T, class... Ts, std::enable_if_t<!std::is_array_v<T>, int> = 0>
+    unique_ptr<T> make_unique(std::pmr::memory_resource *resource, Ts &&... args) {
+        auto alloc = detail::get_alloc<T>(resource);
+        return unique_ptr<T>(
+                essential::allocator_new<T>(alloc, std::forward<Ts>(args)...),
+                detail::destruct_a<T>{resource}
+        );
+    }
+
+    template<class T, std::enable_if_t<std::is_array_v<T> && std::extent_v<T> == 0, int> = 0>
+    unique_ptr<T> make_unique(std::pmr::memory_resource *resource, const size_t size) {
+        using Elem = std::remove_extent_t<T>;
+        const auto mem = detail::get_alloc<Elem>(resource).allocate(size);
+        for (size_t i = 0; i < size; ++i) std::construct_at(mem + i);
+        return unique_ptr<T>(mem, detail::destruct_b<T>{size, resource});
+    }
+
+    template<class T, class... Ts, std::enable_if_t<std::extent_v<T> != 0, int> = 0>
+    void make_unique(Ts &&...) = delete;
 }

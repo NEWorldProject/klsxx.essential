@@ -22,10 +22,38 @@
 
 #pragma once
 
+#include <memory>
 #include <utility>
+#include <type_traits>
 
 namespace kls {
 	struct Object {};
 
+    struct NonCopyable: Object {
+        NonCopyable() = default;
+        NonCopyable &operator=(NonCopyable &&) = delete;
+        NonCopyable &operator=(const NonCopyable &) = delete;
+    };
+
+    struct AddressSensitive: Object {
+        AddressSensitive() = default;
+        AddressSensitive(AddressSensitive &&) = delete;
+        AddressSensitive(const AddressSensitive &) = delete;
+        AddressSensitive &operator=(AddressSensitive &&) = delete;
+        AddressSensitive &operator=(const AddressSensitive &) = delete;
+    };
+
 	struct PmrBase : Object { virtual ~PmrBase() noexcept = default; };
+
+    template <class T>
+    union Storage {
+        T value;
+        Storage() noexcept {} //NOLINT
+        ~Storage() {} //NOLINT
+    };
+
+    template <class T>
+    T& delegate_to_move_construct(T* ths, T&& other) noexcept(std::is_nothrow_move_constructible_v<T>) {
+        return *(std::destroy_at(ths), std::construct_at(ths, std::forward<T>(other)));
+    }
 }
