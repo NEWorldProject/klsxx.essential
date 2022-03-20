@@ -22,8 +22,10 @@
 
 #pragma once
 
-#ifdef _MSC_VER
+#if __has_include(<Windows.h>)
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <winsock2.h>

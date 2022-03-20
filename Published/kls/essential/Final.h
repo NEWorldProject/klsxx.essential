@@ -23,38 +23,48 @@
 #pragma once
 
 #include <utility>
+#include <optional>
+#include "kls/Object.h"
 
 namespace kls::essential {
-    template <class Fn>
+    template<class Fn>
     class Final {
     public:
-        explicit Final(Fn&& v) : m_fn(std::forward<Fn>(v)) {}
+        explicit Final(Fn &&v) : m_fn(std::forward<Fn>(v)) {}
 
-        explicit Final(const Fn& v) : m_fn(std::forward<Fn>(v)) {}
+        explicit Final(const Fn &v) : m_fn(std::forward<Fn>(v)) {}
 
         ~Final() noexcept { m_fn(); }
     private:
         Fn m_fn;
     };
 
-    template <class T, class Fn>
-    class RAII {
+    template<class T, class Fn> requires requires { std::is_trivial_v<T>; }
+    class RAII : public NonCopyable {
     public:
-        explicit RAII(T v, Fn&& fn) : m_v(v), m_fn(std::forward<Fn>(fn)) {}
+        explicit RAII(T v, Fn &&fn) : m_v{std::in_place, v, std::forward<Fn>(fn)} {}
+        explicit RAII(T v, const Fn &fn) : m_v{std::in_place, v, std::forward<Fn>(fn)} {}
+        RAII(RAII&& o) noexcept : m_v{std::move(o.m_v)} { o.m_v = std::nullopt; }
+        RAII& operator=(RAII&& o) noexcept { return delegate_to_move_construct(this, std::move(o)); } //NOLINT
 
-        explicit RAII(T v, const Fn& fn) : m_v(v), m_fn(std::forward<Fn>(fn)) {}
-
-        auto reset(T v) noexcept {
-            auto res = m_v;
-            m_v = v;
+        T reset() noexcept {
+            auto res = m_v->v;
+            m_v = std::nullopt;
             return res;
         }
 
-        auto get() const noexcept { return m_v; }
+        auto get() const noexcept { return m_v->v; }
 
-        ~RAII() noexcept { m_fn(m_v); }
+        ~RAII() noexcept { if (m_v) m_v->fn(m_v->v); }
     private:
-        T m_v;
-        Fn m_fn;
+        struct Inner {
+            T v;
+            Fn fn;
+
+            explicit Inner(T v, Fn &&fn) : v(v), fn(std::forward<Fn>(fn)) {}
+            explicit Inner(T v, const Fn &fn) : v(v), fn(std::forward<Fn>(fn)) {}
+        };
+
+        std::optional<Inner> m_v;
     };
 }

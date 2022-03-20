@@ -31,8 +31,14 @@ namespace kls {
 
     struct NonCopyable: Object {
         NonCopyable() = default;
-        NonCopyable &operator=(NonCopyable &&) = delete;
+        NonCopyable(const NonCopyable &) = delete;
         NonCopyable &operator=(const NonCopyable &) = delete;
+    };
+
+    struct NonMovable: Object {
+        NonMovable() = default;
+        NonMovable(NonMovable &&) = delete;
+        NonMovable &operator=(NonMovable &&) = delete;
     };
 
     struct AddressSensitive: Object {

@@ -132,7 +132,7 @@ namespace kls::essential {
         template<class T>
         requires std::is_arithmetic_v<T>
         void put(T v) noexcept {
-            m_access.template put(m_offset, v);
+            m_access.put(m_offset, v);
             m_offset += sizeof(T);
         }
 
