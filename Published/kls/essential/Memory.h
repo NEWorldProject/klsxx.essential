@@ -83,7 +83,10 @@ namespace kls::essential {
     public:
         template <class Range> requires std::ranges::contiguous_range<Range>
         constexpr Span(Range& range) noexcept: m_begin(std::ranges::data(range)), m_size(std::ranges::size(range)) {}
-        constexpr Span(T* data, size_t size) noexcept : m_begin{ data }, m_size(size) {}
+        template <class U> requires std::integral<U>
+        constexpr Span(T* data, U size) noexcept : m_begin{ data }, m_size(size) {}
+        template <class U> requires std::integral<U>
+        constexpr Span(const T* data, U size) noexcept : m_begin{ const_cast<T*>(data) }, m_size(size) {}
         constexpr Span(Span&&) noexcept = default;
         constexpr Span(const Span&) noexcept = default;
         constexpr Span& operator=(Span&&) noexcept = default;
@@ -111,7 +114,10 @@ namespace kls::essential {
     template<>
     class Span<void> {
     public:
-        constexpr Span(void* data, size_t size) noexcept : m_begin{ data }, m_size(size) {}
+        template <class U> requires std::integral<U>
+        constexpr Span(void* data, U size) noexcept : m_begin{ data }, m_size(size) {}
+        template <class U> requires std::integral<U>
+        constexpr Span(const void* data, U size) noexcept : m_begin{ const_cast<void*>(data) }, m_size(size) {}
         constexpr Span(Span&&) noexcept = default;
         constexpr Span(const Span&) noexcept = default;
         constexpr Span& operator=(Span&&) noexcept = default;
