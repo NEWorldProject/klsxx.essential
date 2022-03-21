@@ -206,6 +206,8 @@ namespace kls::pmr {
         struct destruct_a {
             std::pmr::memory_resource *resource{};
 
+            destruct_a() = default;
+
             void operator()(T *ptr) noexcept {
                 auto alloc = detail::get_alloc<T>(resource);
                 essential::allocator_delete(alloc, ptr);
@@ -218,6 +220,8 @@ namespace kls::pmr {
             std::pmr::memory_resource *resource{};
 
             using Elem = std::remove_extent_t<T>;
+
+            destruct_b() = default;
 
             explicit destruct_b(size_t size, std::pmr::memory_resource *res) noexcept: size(size), resource(res) {}
 
