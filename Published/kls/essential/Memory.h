@@ -98,7 +98,7 @@ namespace kls::essential {
         constexpr T* data() noexcept { return m_begin; }
         constexpr const T* data() const noexcept { return m_begin; }
         constexpr size_t size() const noexcept { return m_size; }
-        constexpr operator Span<>() const noexcept;
+        constexpr operator Span<void>() const noexcept;
     private:
         T* m_begin;
         size_t m_size;
@@ -131,7 +131,7 @@ namespace kls::essential {
     };
 
     template<class T>
-    inline constexpr Span<T>::operator Span<>() const noexcept { return Span(m_begin, m_size * sizeof(T)); }
+    inline constexpr Span<T>::operator Span<void>() const noexcept { return Span<void>(m_begin, m_size * sizeof(T)); }
 
     /// <summary>
     /// The function performs a static_cast from Span<> regardless of the data alignment

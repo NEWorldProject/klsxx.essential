@@ -91,13 +91,12 @@ namespace kls::essential {
             }
         }
 
+        auto bytes(int offset, int size) const noexcept { return Span<char>{pointer(offset), size}; }
         auto size() const noexcept { return m_span.size(); }
-
     private:
         Span<char> m_span;
 
         [[nodiscard]] char *pointer(int index) noexcept { return m_span.data() + index; }
-
         [[nodiscard]] const char *pointer(int index) const noexcept { return m_span.data() + index; }
     };
 
@@ -119,9 +118,14 @@ namespace kls::essential {
         [[nodiscard]] bool check(int count = 1) const noexcept {
             return (m_offset + sizeof(T) * count) <= m_access.size();
         }
+
+        auto bytes(int size) noexcept {
+            auto span = m_access.bytes(m_offset, size);
+            return (m_offset += size, span);
+        }
     private:
         Access<E> m_access;
-        size_t m_offset{0};
+        int m_offset{0};
     };
 
     template<std::endian E>
@@ -141,8 +145,13 @@ namespace kls::essential {
         [[nodiscard]] bool check(int count = 1) const noexcept {
             return (m_offset + sizeof(T) * count) <= m_access.size();
         }
+
+        auto bytes(int size) noexcept {
+            auto span = m_access.bytes(m_offset, size);
+            return (m_offset += size, span);
+        }
     private:
         Access<E> m_access;
-        size_t m_offset{0};
+        int m_offset{0};
     };
 }
