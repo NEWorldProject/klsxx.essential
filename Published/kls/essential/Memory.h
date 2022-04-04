@@ -98,6 +98,22 @@ namespace kls::essential {
         constexpr T* data() noexcept { return m_begin; }
         constexpr const T* data() const noexcept { return m_begin; }
         constexpr size_t size() const noexcept { return m_size; }
+        [[nodiscard]] Span trim_front(size_t diff) const noexcept {
+            if (diff > m_size) diff = m_size;
+            return Span{m_begin + diff, m_size - diff};
+        }
+        [[nodiscard]] Span trim_back(size_t diff) const noexcept {
+            if (diff > m_size) diff = m_size;
+            return Span{m_begin, m_size - diff};
+        }
+        [[nodiscard]] Span keep_front(size_t size) const noexcept {
+            if (size > m_size) size = m_size;
+            return Span{m_begin, size};
+        }
+        [[nodiscard]] Span keep_back(size_t size) const noexcept {
+            if (size > m_size) size = m_size;
+            return Span{m_begin + m_size - size, size};
+        }
         constexpr operator Span<void>() const noexcept;
     private:
         T* m_begin;
@@ -125,6 +141,22 @@ namespace kls::essential {
         constexpr void* data() noexcept { return m_begin; }
         constexpr const void* data() const noexcept { return m_begin; }
         size_t size() const noexcept { return m_size; }
+        [[nodiscard]] Span trim_front(size_t diff) const noexcept {
+            if (diff > m_size) diff = m_size;
+            return Span{static_cast<char*>(m_begin) + diff, m_size - diff};
+        }
+        [[nodiscard]] Span trim_back(size_t diff) const noexcept {
+            if (diff > m_size) diff = m_size;
+            return Span{static_cast<char*>(m_begin), m_size - diff};
+        }
+        [[nodiscard]] Span keep_front(size_t size) const noexcept {
+            if (size > m_size) size = m_size;
+            return Span{static_cast<char*>(m_begin), size};
+        }
+        [[nodiscard]] Span keep_back(size_t size) const noexcept {
+            if (size > m_size) size = m_size;
+            return Span{static_cast<char*>(m_begin) + m_size - size, size};
+        }
     private:
         void* m_begin;
         size_t m_size;
