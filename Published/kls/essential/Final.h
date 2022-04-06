@@ -36,7 +36,7 @@ namespace kls::essential {
 
         ~Final() noexcept { m_fn(); }
     private:
-        Fn m_fn;
+        std::decay_t<Fn> m_fn;
     };
 
     template<class T, class Fn> requires requires { std::is_trivial_v<T>; }
@@ -59,7 +59,7 @@ namespace kls::essential {
     private:
         struct Inner {
             T v;
-            Fn fn;
+            std::decay_t<Fn> fn;
 
             explicit Inner(T v, Fn &&fn) : v(v), fn(std::forward<Fn>(fn)) {}
             explicit Inner(T v, const Fn &fn) : v(v), fn(std::forward<Fn>(fn)) {}

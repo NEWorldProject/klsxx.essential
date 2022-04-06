@@ -82,7 +82,7 @@ namespace kls::essential {
     class Span {
     public:
         template <class Range> requires std::ranges::contiguous_range<Range>
-        constexpr Span(Range& range) noexcept: m_begin(std::ranges::data(range)), m_size(std::ranges::size(range)) {}
+        constexpr Span(Range& range) noexcept: Span{std::ranges::data(range), std::ranges::size(range)} {}
         template <class U> requires std::integral<U>
         constexpr Span(T* data, U size) noexcept : m_begin{ data }, m_size(size) {}
         template <class U> requires std::integral<U>
