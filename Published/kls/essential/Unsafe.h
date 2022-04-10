@@ -23,7 +23,7 @@
 #pragma once
 
 #include <bit>
-#include "Memory.h"
+#include "kls/Span.h"
 
 #if defined(_MSC_VER) && (!defined(__clang__) || defined(__c2__))
 # include <cstdlib>

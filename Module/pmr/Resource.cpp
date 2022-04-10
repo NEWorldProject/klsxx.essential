@@ -22,29 +22,30 @@
 
 #pragma once
 
-#include <cstdint>
-#include "kls/pmr/Automatic.h"
+#include <new>
+#include "kls/pmr/Resource.h"
 
-namespace kls::temp {
-    pmr::MemoryResource *resource() noexcept;
+namespace kls::pmr {
+    MemoryResource *default_resource() noexcept {
+        struct Resource : MemoryResource {
+            Resource() noexcept: MemoryResource(
+                    reinterpret_cast<FnAllocate>(&Resource::allocate_self),
+                    reinterpret_cast<FnDeallocate>(&Resource::deallocate_self)
+            ) {}
 
-    template<class T>
-    struct allocator: pmr::PolymorphicAllocator<T> {
-        allocator() noexcept: pmr::PolymorphicAllocator<T>(resource()) {}
-        template<class U>
-        allocator(const allocator<U> &o) noexcept: pmr::PolymorphicAllocator<T>(o.resource()) {} // NOLINT
-    };
+            void *allocate_self(size_t bytes, size_t alignment) { // NOLINT
+                if (alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+                    return ::operator new (bytes, std::align_val_t{alignment});
+                return ::operator new(bytes);
+            }
 
-    template<class T, class... Ts, std::enable_if_t<!std::is_array_v<T>, int> = 0>
-    decltype(auto) make_unique(Ts &&... args) {
-        return pmr::make_unique<T>(resource(), std::forward<Ts>(args)...);
+            void deallocate_self(void *p, size_t bytes, size_t alignment) { // NOLINT
+                if (alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+                    return ::operator delete (p, bytes, std::align_val_t{alignment});
+                ::operator delete(p, bytes);
+            }
+        };
+        static Resource resource{};
+        return &resource;
     }
-
-    template<class T, std::enable_if_t<std::is_array_v<T>&& std::extent_v<T> == 0, int> = 0>
-    decltype(auto) make_unique(const size_t size) {
-        return pmr::make_unique<T>(resource(), size);
-    }
-
-    template<class T, class... Ts, std::enable_if_t<std::extent_v<T> != 0, int> = 0>
-    void make_unique(Ts &&...) = delete;
 }

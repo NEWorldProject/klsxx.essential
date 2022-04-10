@@ -33,7 +33,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace kls::essential {
+namespace kls {
     template<template<class T> class allocator>
     struct AllocAliased {
         template<class T> using basic_string = std::basic_string<T, std::char_traits<T>, allocator < T>>;

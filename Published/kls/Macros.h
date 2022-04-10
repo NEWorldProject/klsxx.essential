@@ -22,29 +22,14 @@
 
 #pragma once
 
-#include <cstdint>
-#include "kls/pmr/Automatic.h"
+#ifdef _MSC_VER
+#define KLS_FORCE_INLINE [[msvc::forceinline]]
+#else
+#define KLS_FORCE_INLINE [[gnu::always_inline]]
+#endif
 
-namespace kls::temp {
-    pmr::MemoryResource *resource() noexcept;
-
-    template<class T>
-    struct allocator: pmr::PolymorphicAllocator<T> {
-        allocator() noexcept: pmr::PolymorphicAllocator<T>(resource()) {}
-        template<class U>
-        allocator(const allocator<U> &o) noexcept: pmr::PolymorphicAllocator<T>(o.resource()) {} // NOLINT
-    };
-
-    template<class T, class... Ts, std::enable_if_t<!std::is_array_v<T>, int> = 0>
-    decltype(auto) make_unique(Ts &&... args) {
-        return pmr::make_unique<T>(resource(), std::forward<Ts>(args)...);
-    }
-
-    template<class T, std::enable_if_t<std::is_array_v<T>&& std::extent_v<T> == 0, int> = 0>
-    decltype(auto) make_unique(const size_t size) {
-        return pmr::make_unique<T>(resource(), size);
-    }
-
-    template<class T, class... Ts, std::enable_if_t<std::extent_v<T> != 0, int> = 0>
-    void make_unique(Ts &&...) = delete;
-}
+#ifdef _MSC_VER
+#define KLS_ALLOCATE __declspec(allocator)
+#else
+#define KLS_ALLOCATE
+#endif
