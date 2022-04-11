@@ -37,9 +37,6 @@ namespace kls {
         std::is_trivially_destructible_v<T>;
     };
 
-    template<class T> requires TrivialManipulableData<T>
-    class Handle;
-
     namespace detail {
         class HandleControl {
             using BaseDestruct = void (*)(void *base, void *data) noexcept;
@@ -57,24 +54,7 @@ namespace kls {
                 { fn(h) };
                 noexcept(fn(h));
             }
-            static HandleControl *make(Fn &&destruct) {
-                using FnConcrete = std::decay_t<Fn>;
-                struct Base {
-                    FnConcrete callable;
-                    HandleControl control;
-                };
-                Base *const base = new Base{
-                        .callable = FnConcrete(std::forward<Fn>(destruct)),
-                        .control = HandleControl{}
-                };
-                base->control.mBasePointer = base;
-                base->control.mBaseDestruct = [](void *base, void *data) noexcept {
-                    const auto obj = static_cast<Base *>(base);
-                    obj->callable(static_cast<Handle<T> *>(data)->value());
-                    delete obj;
-                };
-                return &base->control;
-            }
+            static HandleControl *make(Fn &&destruct);
         private:
             void *mBasePointer{};
             BaseDestruct mBaseDestruct{};
@@ -140,4 +120,30 @@ namespace kls {
     private:
         H mHandle;
     };
+
+    namespace detail {
+        template<class T, class Fn>
+        requires requires(T &h, Fn fn) {
+            { fn(h) };
+            noexcept(fn(h));
+        }
+        inline HandleControl *HandleControl::make(Fn &&destruct) {
+            using FnConcrete = std::decay_t<Fn>;
+            struct Base {
+                FnConcrete callable;
+                HandleControl control;
+            };
+            Base *const base = new Base{
+                    .callable = FnConcrete(std::forward<Fn>(destruct)),
+                    .control = HandleControl{}
+            };
+            base->control.mBasePointer = base;
+            base->control.mBaseDestruct = [](void *base, void *data) noexcept {
+                const auto obj = static_cast<Base *>(base);
+                obj->callable(static_cast<Handle<T> *>(data)->value());
+                delete obj;
+            };
+            return &base->control;
+        }
+    }
 }
