@@ -23,6 +23,7 @@
 #pragma once
 
 #include <memory>
+#include <cstddef>
 #include "kls/Object.h"
 #include "kls/Macros.h"
 

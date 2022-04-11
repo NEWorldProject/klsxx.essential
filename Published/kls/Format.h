@@ -21,3 +21,41 @@
 */
 
 #pragma once
+
+#ifdef _MSC_VER
+#include <format>
+namespace kls {
+    using std::format;
+    using std::format_to;
+    using std::format_to_n;
+    using std::formatted_size;
+    using std::vformat;
+    using std::vformat_to;
+    using std::formatter;
+    using std::basic_format_parse_context;
+    using std::format_parse_context;
+    using std::basic_format_context;
+    using std::format_context;
+    using std::basic_format_arg;
+    using std::basic_format_args;
+    using std::format_args;
+}
+#else
+#include <fmt/core.h>
+namespace kls {
+    using fmt::format;
+    using fmt::format_to;
+    using fmt::format_to_n;
+    using fmt::formatted_size;
+    using fmt::vformat;
+    using fmt::vformat_to;
+    using fmt::formatter;
+    using fmt::basic_format_parse_context;
+    using fmt::format_parse_context;
+    using fmt::basic_format_context;
+    using fmt::format_context;
+    using fmt::basic_format_arg;
+    using fmt::basic_format_args;
+    using fmt::format_args;
+}
+#endif

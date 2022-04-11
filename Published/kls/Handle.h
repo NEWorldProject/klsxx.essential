@@ -86,8 +86,8 @@ namespace kls {
     private:
         T mValue;
         detail::HandleControl *mControl;
-        void acquire() noexcept { mControl->acquire(); }
         void release() noexcept { mControl->release(this); }
+        void acquire() const noexcept { mControl->acquire(); }
     };
 
     struct HandleAccess {

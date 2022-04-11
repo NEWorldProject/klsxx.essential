@@ -20,8 +20,6 @@
 * SOFTWARE.
 */
 
-#pragma once
-
 #include <new>
 #include "kls/pmr/Resource.h"
 
