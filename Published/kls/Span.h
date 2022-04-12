@@ -177,7 +177,7 @@ namespace kls {
     template<class T>
     constexpr bool copy(Span<T> src, Span<T> dst) noexcept(span_safely_copyable_type<T>) {
         if (src.size() != dst.size()) return false;
-        if constexpr(std::same_as<void, T>)
+        if constexpr(!std::same_as<void, T>)
             std::copy(src.begin(), src.end(), dst.begin());
         else
             std::memmove(dst.data(), src.data(), dst.size());
