@@ -61,9 +61,9 @@ namespace kls::essential {
             auto reset(Node* const np) noexcept { return (left = right = nullptr, parent = np, height = 1, this); }
         };
     public:
-        void push(uintptr_t location) noexcept { add(reinterpret_cast<Node*>(location)); }
+        void push(const uintptr_t location) noexcept { add(reinterpret_cast<Node*>(location)); }
         
-        [[nodiscard]] bool pop_back_if(uintptr_t location) noexcept {
+        [[nodiscard]] bool pop_back_if(const uintptr_t location) noexcept {
             if (max == nullptr) return false;
             if (max->value() != location) return false;
             delete_leaf(max);
@@ -144,7 +144,7 @@ namespace kls::essential {
             else return avl->fix_height();
         }
 
-        void node_fix_up(Node* node) {
+        void node_fix_up(Node* node) noexcept {
             while (node) {
                 const auto parent = node->parent;
                 if (!try_balance(node)) return;
@@ -152,18 +152,33 @@ namespace kls::essential {
             }
         }
 
+        static Node* trace_min(Node* const node) noexcept {
+            auto current = node;
+            while (current->left) current = current->left;
+            return current;
+        }
+
+        static Node* trace_max(Node* node) noexcept {
+            auto current = node;
+            while (current->right) current = current->right;
+            return current;
+        }
+
         void delete_leaf(Node* const node) noexcept {
             const auto parent = node->parent;
             // update min-max tags
-            if (node == min) { if (node->right) min = node->right; else min = parent; }
-            if (node == max) { if (node->left) max = node->left; else max = parent; }
+            if (node == min) { if (node->right) min = trace_min(node->right); else min = parent; }
+            if (node == max) { if (node->left) max = trace_max(node->left); else max = parent; }
             // remove the node from tree
-            const auto child = (node->left ? node->left : node->right);
+            const auto child = node->left ? node->left : node->right;
             if (parent) {
                 parent->replace(node, child);
                 node_fix_up(parent);
             }
-            else if ((root = child)) child->parent = nullptr;
+            else {
+                root = child;
+                if (child) child->parent = nullptr;
+            }
         }
     };
 }
